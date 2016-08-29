@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv="content-type" content="text/html;">
+    <title>商城首页自适应宽度滑动图</title>
+    <style>
+        body,div,span,ul,li{ outline: 0;margin:0;padding:0 }
+        ol,ul,li{list-style:none;}
+        img{border:none;border-collapse:collapse;vertical-align:top;}
+        a{text-decoration: none;}
+        a:link,a:visited,a:active{}
+        a:hover{text-decoration: none;}
+        html{line-height:1;overflow-y:scroll;}
+        body {
+            font-family: "Microsoft Yahei","Arial","Avenir",sans-serif;
+            height: 100%;
+        }
+        *{box-sizing: border-box;}
+
+        /*  slide 滑动图所有内容容器 */
+        #slide{
+            width: 100%;height:370px; overflow: hidden; position: relative;
+            min-width: 1000px;
+            /*为确保图片最小区域有1000px,所以这里 min-width 设置为1000px；
+            这里容器高度设置为670px,这个高度可以根据个人需求随便设置
+            */
+        }
+
+        /* 左右两个箭头以及四个焦点样式 */
+        #slide .pre{
+            cursor:pointer; width:45px; height:45px;
+            background:url('./images/l.png') 0 0 no-repeat;
+            position:absolute; top:50%; left:10px; z-index:10;
+        }
+        #slide .next{
+            cursor:pointer; width:45px; height:45px;
+            background:url('./images/r.png') 0 0 no-repeat;
+            position:absolute; top:50%; right:10px; z-index:10;
+        }
+        #slide .smalltitle {
+            width:100%; height:10px;
+            position:absolute; bottom:15px; z-index:10;
+        }
+        #slide .smalltitle ul{ width:120px; margin:0 auto;}
+        #slide .smalltitle ul li{
+            width:15px; height:15px; margin:0 5px;
+            border-radius:15px;
+            background:#ffffff; float:left; overflow:hidden;
+            opacity: 0.6;
+        }
+        #slide .smalltitle .current{ background:#69aaec;}
+
+        #slide_container{
+            width:1000px; height:100%; margin:0px auto;
+            overflow: visible;
+        }
+        #slide_container .slide_layout{
+            width: 1920px;height:100%;
+            position: absolute;top: auto; left: auto;
+            /*这里设置top 和left 都为auto是为了让图片左边与div#slide_container的左边对齐，
+            只是为了计算，让图片的中间区域在div#slide_container的范围里
+            */
+        }
+        #slide_container .slide_layout .layout_left{
+            width: 1920px; height:100%;overflow:hidden;
+            position: absolute;top: auto; left: -460px;
+            /* （1920 - 1000）/ 2 = 460*/
+        }
+        #slide_container .slide_layout .layout_left .layout_inner{
+            width: 1920px; height:100%; overflow: hidden; position: relative;
+            /*控制图片显示区域，这个显示区域与我们看到的区域可能并不一样，受显示器分辨率影响。
+            最大显示区域为width: 1920px;
+            */
+        }
+        #slide_container .oUlplay {
+            width:99999px; position:absolute; left:0; top:0;
+            /*这个width设置得大一点，确保以float布局时，不会换行*/
+        }
+        #slide_container .oUlplay li{
+            display:block;float:left;
+            /*以float布局方式，放置图片*/
+        }
+        #slide_container .oUlplay li a{
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<section id="slide" class="clearfix">
+    <div class="pre"></div>
+    <div class="next"></div>
+    <div class="smalltitle">
+        <ul>
+            <li></li><li></li><li></li><li></li>
+        </ul>
+    </div>
+
+    <div id="slide_container">
+        <div class="slide_layout">
+            <div class="layout_left">
+                <div class="layout_inner">
+                    <ul class="oUlplay">
+                        <li><a href="#"><img src="images/slide-1.jpg"/></a></li>
+                        <li><a href="#"><img src="images/slide-2.jpg"/></a></li>
+                        <li><a href="#"><img src="images/slide-3.jpg"/></a></li>
+                        <li><a href="#"><img src="images/slide-4.jpg"/></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    (function(window){
+
+        function getStyle(obj,name)
+        {
+            if(obj.currentStyle) {
+                return obj.currentStyle[name]
+            } else {
+                return getComputedStyle(obj,false)[name]
+            }
+        }
+
+        /*这个方法时根据属性的渐变来实现图片的切换，
+         如果第二个参数为left，就是控制“指定的对象” 到 “指定的左边边框”的距离 */
+        function startMove(obj,att,add)
+        {
+            clearInterval(obj.timer);
+            obj.timer = setInterval(function(){
+                var cutt = 0 ;
+                if(att=='opacity') {
+                    cutt = Math.round(parseFloat(getStyle(obj,att)));
+                } else {
+                    cutt = Math.round(parseInt(getStyle(obj,att)));
+                }
+                var speed = (add-cutt)/4;
+                speed = speed>0?Math.ceil(speed):Math.floor(speed);
+                if(cutt==add) {
+                    clearInterval(obj.timer)
+                } else {
+                    if(att=='opacity') {
+                        obj.style.opacity = (cutt+speed)/100;
+                        obj.style.filter = 'alpha(opacity:'+(cutt+speed)+')';
+                    } else {
+                        obj.style[att] = cutt+speed+'px';
+                    }
+                }
+
+            },30)
+        }
+
+        window.onload = function()
+        {
+            var slideDom = document.getElementById('slide');
+            var oDiv = document.getElementById('slide_container');
+            if(!slideDom){
+                return false;
+            }
+            var oPre = slideDom.querySelector('.pre');
+            var oNext = slideDom.querySelector('.next');
+
+            var oUlBig = oDiv.querySelector('.oUlplay');
+            var aBigLi = oUlBig.getElementsByTagName('li');   //aBigLi 包含的是图片
+
+            var oDivSmall = slideDom.querySelector('.smalltitle');
+            var aLiSmall = oDivSmall.getElementsByTagName('li');      //aLiSmall 包含的是焦点
+            if(aBigLi.length<2){
+                /*图片数量小于2的话，左右箭头以及焦点不显示*/
+                oDivSmall.style.display = 'none';
+                oPre.style.display = 'none';
+                oNext.style.display = 'none';
+                return false;
+            }
+
+            function tab()
+            {
+                for(var i=0; i<aLiSmall.length; i++) {
+                    aLiSmall[i].className = '';
+                }
+                aLiSmall[now].className = 'current';
+                startMove(oUlBig,'left',-(now*aBigLi[0].offsetWidth))
+            }
+
+            var now = 0;
+            for(var i=0; i<aLiSmall.length; i++) {
+                aLiSmall[i].index = i;
+                /* 设置焦点的点击事件 */
+                aLiSmall[i].onclick = function() {
+                    now = this.index;
+                    tab();
+                }
+            }
+
+            /*左右箭头的点击事件*/
+            oPre.onclick = function() {
+                now--;
+                if(now ==-1){
+                    now = aBigLi.length-1;
+                }
+                tab();
+            }
+            oNext.onclick = function() {
+                now++;
+                if(now ==aBigLi.length) {
+                    now = 0;
+                }
+                tab();
+            }
+
+            /*设置自动滑动，每3秒滑动一次*/
+            var timer = setInterval(oNext.onclick,3000);
+
+            /*鼠标在图片上的over事件*/
+            oDiv.onmouseover = function() {
+                clearInterval(timer)
+            }
+            oDiv.onmouseout = function() {
+                timer = setInterval(oNext.onclick,3000);
+            }
+
+            /*鼠标在左右箭头上的over事件，确保点击的时候，图片不乱动*/
+            oPre.onmouseover = function() {
+                clearInterval(timer)
+            }
+            oNext.onmouseover = function() {
+                clearInterval(timer)
+            }
+        }
+    })(window);
+</script>
+</body>
+</html>
